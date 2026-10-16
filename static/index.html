@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>我的申请 - 审批系统</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header id="nav"></header>
+  <main>
+    <div id="message"></div>
+    <div class="toolbar">
+      <h1>我的申请</h1>
+      <select id="status-filter">
+        <option value="">全部状态</option>
+      </select>
+    </div>
+    <table>
+      <thead>
+        <tr><th>编号</th><th>类型</th><th>标题</th><th>状态</th><th>更新时间</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div id="empty" class="empty" hidden>还没有申请</div>
+  </main>
+  <script src="js/common.js"></script>
+  <script src="js/index.js"></script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>申请 - 审批系统</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header id="nav"></header>
+  <main>
+    <div id="message"></div>
+    <h1 id="page-title">新建申请</h1>
+    <form id="request-form" class="card" novalidate>
+      <div class="row">
+        <div class="field">
+          <label for="type">类型</label>
+          <select id="type" name="type">
+            <option value="leave">请假</option>
+            <option value="expense">报销</option>
+          </select>
+        </div>
+        <div class="field" style="flex: 3">
+          <label for="title">标题</label>
+          <input id="title" name="title" maxlength="100">
+          <div class="error-text" data-error="title"></div>
+        </div>
+      </div>
+
+      <fieldset id="leave-fields" style="border: none; padding: 0; margin: 0">
+        <div class="row">
+          <div class="field">
+            <label>请假类型</label>
+            <select name="leave.kind">
+              <option value="annual">年假</option>
+              <option value="sick">病假</option>
+              <option value="personal">事假</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>开始日期</label>
+            <input type="date" name="leave.start_date">
+            <div class="error-text" data-error="leave.start_date"></div>
+          </div>
+          <div class="field">
+            <label>结束日期</label>
+            <input type="date" name="leave.end_date">
+            <div class="error-text" data-error="leave.end_date"></div>
+          </div>
+          <div class="field">
+            <label>天数</label>
+            <input name="leave.days" inputmode="decimal" placeholder="可以是 0.5 的倍数">
+            <div class="error-text" data-error="leave.days"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>事由</label>
+          <textarea name="leave.reason" maxlength="500"></textarea>
+          <div class="error-text" data-error="leave.reason"></div>
+        </div>
+      </fieldset>
+
+      <fieldset id="expense-fields" style="border: none; padding: 0; margin: 0" hidden>
+        <div class="row">
+          <div class="field">
+            <label>报销类别</label>
+            <select name="expense.category">
+              <option value="travel">差旅</option>
+              <option value="office">办公用品</option>
+              <option value="meal">招待</option>
+              <option value="other">其他</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>金额（元）</label>
+            <input name="expense.amount" inputmode="decimal">
+            <div class="error-text" data-error="expense.amount"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>事由</label>
+          <textarea name="expense.reason" maxlength="500"></textarea>
+          <div class="error-text" data-error="expense.reason"></div>
+        </div>
+      </fieldset>
+
+      <div class="buttons">
+        <button type="button" id="submit-btn" class="primary">提交审批</button>
+        <button type="button" id="save-btn">保存草稿</button>
+      </div>
+    </form>
+  </main>
+  <script src="js/common.js"></script>
+  <script src="js/form.js"></script>
+</body>
+</html>
