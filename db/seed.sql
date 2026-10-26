@@ -1,6 +1,9 @@
 -- 演示数据，在 schema.sql 之后执行：psql -U postgres -d approval -f db/seed.sql
 -- 所有账号的密码都是 123456
 
+-- 下面写的时间都是北京时间。不设的话按数据库的时区理解，Docker 里的数据库是 UTC，页面上会差 8 小时
+SET TIME ZONE 'Asia/Shanghai';
+
 INSERT INTO departments (id, name) VALUES
     (1, '技术部'),
     (2, '市场部'),

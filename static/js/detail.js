@@ -81,7 +81,7 @@ function render(r) {
     el('div', { class: 'card' }, infoList(r)),
     el('h2', {}, '审批记录'),
     historyTable(r),
-    actionArea(r),
+    ...actionArea(r), // 返回的是数组，要展开；直接传数组会被当成文字显示
   );
 }
 
