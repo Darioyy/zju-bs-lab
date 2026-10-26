@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>管理 - 审批系统</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header id="nav"></header>
+  <main>
+    <div id="message"></div>
+
+    <section id="departments" hidden>
+      <div class="toolbar">
+        <h2>部门</h2>
+        <button type="button" id="dept-new">新建部门</button>
+      </div>
+      <form id="dept-form" class="card" novalidate hidden>
+        <h3 id="dept-form-title"></h3>
+        <div class="row">
+          <div class="field">
+            <label for="dept-name">名称</label>
+            <input id="dept-name" name="name" maxlength="50">
+            <div class="error-text" data-error="name"></div>
+          </div>
+          <div class="field" id="manager-field">
+            <label for="dept-manager">经理</label>
+            <select id="dept-manager" name="manager_id"></select>
+            <div class="error-text" data-error="manager_id"></div>
+          </div>
+        </div>
+        <div class="buttons">
+          <button type="button" class="primary" id="dept-save">保存</button>
+          <button type="button" id="dept-cancel">取消</button>
+        </div>
+      </form>
+      <table>
+        <thead>
+          <tr><th>编号</th><th>名称</th><th>经理</th><th>在职人数</th></tr>
+        </thead>
+        <tbody id="dept-rows"></tbody>
+      </table>
+    </section>
+
+    <section id="users" hidden>
+      <div class="toolbar">
+        <h2>用户</h2>
+        <button type="button" id="user-new">新建用户</button>
+      </div>
+      <form id="user-form" class="card" novalidate hidden>
+        <h3 id="user-form-title"></h3>
+        <div class="row">
+          <div class="field">
+            <label for="user-username">账号</label>
+            <input id="user-username" name="username" maxlength="32" autocomplete="off"
+                   placeholder="3~32 位小写字母、数字或下划线">
+            <div class="error-text" data-error="username"></div>
+          </div>
+          <div class="field">
+            <label for="user-display-name">姓名</label>
+            <input id="user-display-name" name="display_name" maxlength="50">
+            <div class="error-text" data-error="display_name"></div>
+          </div>
+          <div class="field">
+            <label for="user-role">角色</label>
+            <select id="user-role" name="role"></select>
+            <div class="error-text" data-error="role"></div>
+          </div>
+          <div class="field">
+            <label for="user-department">部门</label>
+            <select id="user-department" name="department_id"></select>
+            <div class="error-text" data-error="department_id"></div>
+          </div>
+        </div>
+        <div class="field" id="initial-password-field">
+          <label for="user-password">初始密码</label>
+          <input id="user-password" name="password" type="password" maxlength="128" autocomplete="new-password"
+                 placeholder="至少 6 个字符">
+          <div class="error-text" data-error="password"></div>
+        </div>
+        <div class="buttons">
+          <button type="button" class="primary" id="user-save">保存</button>
+          <button type="button" id="user-cancel">取消</button>
+        </div>
+      </form>
+      <form id="password-form" class="card" novalidate hidden>
+        <h3>重置密码</h3>
+        <div class="field">
+          <label for="new-password">新密码</label>
+          <input id="new-password" name="password" type="password" maxlength="128" autocomplete="new-password"
+                 placeholder="至少 6 个字符，重置后对方要用新密码重新登录">
+          <div class="error-text" data-error="password"></div>
+        </div>
+        <div class="buttons">
+          <button type="button" id="password-save">重置密码</button>
+        </div>
+      </form>
+      <table>
+        <thead>
+          <tr><th>账号</th><th>姓名</th><th>角色</th><th>部门</th><th>状态</th><th></th></tr>
+        </thead>
+        <tbody id="user-rows"></tbody>
+      </table>
+    </section>
+  </main>
+  <script src="js/common.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

@@ -6,7 +6,7 @@ from fastapi import Cookie, Depends
 
 from . import security
 from .db import Connection, get_conn
-from .errors import Unauthorized
+from .errors import Forbidden, Unauthorized
 from .repositories import sessions
 
 SESSION_COOKIE = "session"
@@ -25,3 +25,13 @@ def current_user(conn: Conn, session: Annotated[str | None, Cookie()] = None) ->
 
 
 CurrentUser = Annotated[dict, Depends(current_user)]
+
+
+def admin_user(user: CurrentUser) -> dict:
+    """管理接口用：不是管理员就是 403。"""
+    if user["role"] != "admin":
+        raise Forbidden("只有管理员能管理部门和用户")
+    return user
+
+
+AdminUser = Annotated[dict, Depends(admin_user)]

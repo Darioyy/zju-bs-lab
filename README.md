@@ -24,6 +24,7 @@ app/
   handlers.py        错误转成 JSON 响应
   security.py        密码哈希、登录 token
   workflow.py        状态机和权限规则（纯函数）
+  accounts.py        管理部门和用户的规则（纯函数）
   validation.py      跨字段校验
   routers/           路由层：HTTP 相关
   services/          业务层：检查状态和权限、管理事务
@@ -33,8 +34,11 @@ db/
   schema.sql         建表
   seed.sql           演示数据
   examples.sql       页面要用的查询，以及数据库约束的验证
-tests/               测试
+tests/               纯逻辑测试，不需要数据库
+tests/api/           接口测试和数据库约束测试，要连 PostgreSQL
 docs/requirements.md 需求说明
+Dockerfile           后端镜像
+docker-compose.yml   数据库 + 后端一起启动
 ```
 
 一个请求经过的层次：
@@ -45,27 +49,37 @@ docs/requirements.md 需求说明
 
 ## 运行
 
-1. 初始化数据库：
+### 用 Docker
 
-   ```bash
-   createdb -U postgres approval
-   psql -U postgres -d approval -f db/schema.sql
-   psql -U postgres -d approval -f db/seed.sql
-   ```
+```bash
+docker compose up --build
+```
 
-2. 装依赖，启动：
+第一次启动时数据库自动建表、导入演示数据。浏览器打开 <http://localhost:8000>，接口文档在 <http://localhost:8000/docs>。
 
-   ```bash
-   python -m venv .venv
-   .venv/bin/pip install -r requirements.txt        # Windows: .venv\Scripts\pip
-   .venv/bin/uvicorn app.main:app --reload
-   ```
+`Ctrl+C` 停止；`docker compose down -v` 连数据一起删掉，下次启动重新导入演示数据。
 
-   数据库地址默认是 `postgresql://postgres:postgres@localhost:5432/approval`，不一样就设环境变量 `DATABASE_URL`。
+### 开发时
 
-3. 浏览器打开 <http://127.0.0.1:8000>。接口文档在 <http://127.0.0.1:8000/docs>。
+数据库用 Docker，后端在本机跑，改了代码自动重启：
 
-测试：`pip install pytest` 后在项目根目录运行 `pytest`。
+```bash
+docker compose up -d db
+python3 -m venv .venv                      # Ubuntu 报缺少 venv 模块时先 sudo apt install python3-venv
+.venv/bin/pip install -r requirements-dev.txt
+.venv/bin/uvicorn app.main:app --reload
+```
+
+浏览器打开 <http://127.0.0.1:8000>。数据库地址默认是 `postgresql://postgres:postgres@localhost:5432/approval`，和 `docker-compose.yml` 一致；用自己装的 PostgreSQL 时设环境变量 `DATABASE_URL`，再用 `db/schema.sql`、`db/seed.sql` 建表和导入演示数据。
+
+### 测试
+
+```bash
+.venv/bin/pytest
+```
+
+- `tests/` 下是状态机、校验、密码等纯逻辑测试，不需要数据库。
+- `tests/api/` 下是接口测试和数据库约束测试。它们连单独的测试库 `approval_test`（没有会自动建，每个测试前清空并重新导入演示数据，不碰 `approval` 库），先 `docker compose up -d db` 就能跑；连不上数据库时自动跳过。换地址设 `TEST_DATABASE_URL`，库名必须以 `_test` 结尾。
 
 演示账号的密码都是 `123456`：
 
@@ -98,6 +112,20 @@ docs/requirements.md 需求说明
 | POST | `/requests/{id}/reopen` | 被驳回后改回草稿 |
 | POST | `/requests/{id}/approve` | 通过当前一级 |
 | POST | `/requests/{id}/reject` | 驳回，必须写理由 |
+
+管理接口在 `/api/admin` 下，只有管理员能用：
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/departments` | 部门列表，含经理和在职人数 |
+| POST | `/departments` | 新建部门 |
+| PUT | `/departments/{id}` | 改名、指定经理 |
+| GET | `/users` | 用户列表 |
+| POST | `/users` | 新建用户 |
+| PUT | `/users/{id}` | 改姓名、角色、部门 |
+| POST | `/users/{id}/deactivate` | 停用 |
+| POST | `/users/{id}/activate` | 启用 |
+| POST | `/users/{id}/password` | 重置密码 |
 
 修改类的操作都要带上页面看到的 `version`，单子已经被别人改过时返回 409。
 

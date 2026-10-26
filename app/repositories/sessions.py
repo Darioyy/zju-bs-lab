@@ -32,3 +32,8 @@ def delete_expired(conn: Connection, user_id: int) -> None:
     conn.execute(
         "DELETE FROM sessions WHERE user_id = %s AND expires_at <= now()", (user_id,)
     )
+
+
+def delete_by_user(conn: Connection, user_id: int) -> None:
+    """让这个用户所有已登录的地方都失效（停用、重置密码时用）。"""
+    conn.execute("DELETE FROM sessions WHERE user_id = %s", (user_id,))

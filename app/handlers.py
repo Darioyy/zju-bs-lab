@@ -19,6 +19,7 @@ MESSAGES = {
     "string_too_short": "不能为空",
     "string_too_long": "不能超过 {max_length} 个字",
     "string_type": "必须是文字",
+    "string_pattern_mismatch": "格式不对",
     "int_parsing": "必须是整数",
     "greater_than": "必须大于 {gt}",
     "less_than_equal": "不能超过 {le}",
@@ -34,6 +35,8 @@ MESSAGES = {
 
 
 def translate(error: dict) -> str:
+    if error["type"] == "string_too_short" and error.get("ctx", {}).get("min_length", 1) > 1:
+        return f"至少 {error['ctx']['min_length']} 个字符"
     template = MESSAGES.get(error["type"])
     if template is None:
         return error["msg"]

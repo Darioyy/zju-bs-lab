@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 
 from . import handlers
 from .db import pool
-from .routers import auth, requests
+from .routers import admin, auth, requests
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
@@ -25,6 +25,7 @@ handlers.install(app)
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(requests.router, prefix="/api")
+app.include_router(admin.router, prefix="/api")
 
 # 页面和 js、css。放在最后挂载，/api 开头的请求先被上面的路由接走
 app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")

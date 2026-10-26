@@ -2,10 +2,10 @@
 
 from datetime import date
 from decimal import Decimal
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
 
 class Strict(BaseModel):
@@ -57,3 +57,33 @@ class VersionIn(Strict):
 class DecisionIn(Strict):
     version: int
     comment: str = Field(default="", max_length=500)
+
+
+# 管理部门和用户 ----------------------------------------------------------
+
+class DepartmentIn(Strict):
+    name: str = Field(min_length=1, max_length=50)
+
+
+class DepartmentEdit(DepartmentIn):
+    manager_id: int | None = None  # None 表示不设经理
+
+
+class UserEdit(BaseModel):
+    # 新建用户时要带密码，密码的首尾空格不能去掉，所以不继承 Strict，只给姓名单独去空格
+    model_config = ConfigDict(extra="forbid")
+
+    display_name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=50)]
+    role: Literal["staff", "finance", "admin"]
+    department_id: int | None = None
+
+
+class UserCreate(UserEdit):
+    username: str = Field(pattern=r"^[a-z0-9_]{3,32}$")
+    password: str = Field(min_length=6, max_length=128)
+
+
+class PasswordIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    password: str = Field(min_length=6, max_length=128)

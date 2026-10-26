@@ -6,6 +6,7 @@ const TEXT = {
   kind: { annual: '年假', sick: '病假', personal: '事假' },
   category: { travel: '差旅', office: '办公用品', meal: '招待', other: '其他' },
   decision: { approve: '通过', reject: '驳回' },
+  role: { staff: '普通员工', finance: '财务', admin: '管理员' },
 };
 
 const params = new URLSearchParams(location.search);
@@ -129,14 +130,16 @@ async function initPage() {
   const user = await api('GET', '/me');
   const here = location.pathname.split('/').pop() || 'index.html';
   const link = (href, text) => el('a', { href, class: href === here ? 'active' : null }, text);
-  document.getElementById('nav').append(
+  // append(null) 会插入文字“null”，所以先去掉不显示的项
+  document.getElementById('nav').append(...[
     el('span', { class: 'brand' }, '审批系统'),
     link('index.html', '我的申请'),
     link('todo.html', '待我审批'),
-    user.department_id !== null ? link('form.html', '新建申请') : null,
+    user.department_id !== null && link('form.html', '新建申请'),
+    user.role === 'admin' && link('admin.html', '管理'),
     el('span', { class: 'spacer' }),
     el('span', { class: 'who' }, user.display_name),
     el('button', { class: 'link', onclick: logout }, '退出'),
-  );
+  ].filter(Boolean));
   return user;
 }

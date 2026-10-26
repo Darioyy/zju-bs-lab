@@ -1,0 +1,35 @@
+# docker compose up --build    启动数据库和后端，浏览器打开 http://localhost:8000
+# docker compose down -v        停止并删掉数据库数据，下次启动重新导入演示数据
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: approval
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # 数据目录为空（第一次启动）时按文件名顺序执行，之后启动不再执行
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql:ro
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/2-seed.sql:ro
+    ports:
+      - "5432:5432"  # 方便在本机用 psql 查看、跑接口测试
+    healthcheck:
+      # 用 TCP 检查：初始化脚本执行期间数据库只监听本地 socket，等脚本跑完正式启动才算好
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d approval"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  app:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/approval
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

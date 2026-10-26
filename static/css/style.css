@@ -69,6 +69,7 @@ tbody tr.link:hover { background: #f0f6ff; }
 .field label { display: block; margin-bottom: 4px; color: var(--muted); }
 .row { display: flex; gap: 16px; }
 .row .field { flex: 1; }
+@media (max-width: 600px) { .row { flex-direction: column; gap: 0; } }
 input, select, textarea {
   width: 100%;
   padding: 7px 10px;
@@ -79,6 +80,7 @@ input, select, textarea {
 }
 textarea { min-height: 80px; resize: vertical; }
 input:focus, select:focus, textarea:focus { outline: 2px solid #9ec5fe; border-color: var(--primary); }
+input:disabled, select:disabled { background: var(--bg); color: var(--muted); }
 .invalid { border-color: var(--danger); }
 .error-text { color: var(--danger); font-size: 12px; min-height: 18px; }
 
@@ -95,6 +97,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 button.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
 button.danger { color: var(--danger); }
 button.link { border: none; background: none; padding: 0; color: var(--primary); }
+button.link.danger { color: var(--danger); }
 .buttons { display: flex; gap: 8px; margin-top: 16px; }
 
 /* 详情页 */
@@ -102,7 +105,13 @@ dl.info { display: grid; grid-template-columns: 90px 1fr; gap: 8px 16px; margin:
 dl.info dt { color: var(--muted); }
 dl.info dd { margin: 0; white-space: pre-wrap; }
 .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-.toolbar h1 { margin: 0; flex: 1; }
+.toolbar h1, .toolbar h2 { margin: 0; flex: 1; }
+
+/* 管理页 */
+section + section { margin-top: 32px; }
+section .card { margin-bottom: 16px; }
+.card h3 { font-size: 15px; margin: 0 0 12px; }
+tr.inactive td { color: var(--muted); }
 
 /* 登录页 */
 .login { max-width: 360px; margin: 120px auto; }
