@@ -21,16 +21,19 @@ MESSAGES = {
     "string_type": "必须是文字",
     "string_pattern_mismatch": "格式不对",
     "int_parsing": "必须是整数",
+    "int_type": "必须是整数",
     "greater_than": "必须大于 {gt}",
     "less_than_equal": "不能超过 {le}",
     "decimal_parsing": "必须是数字",
     "decimal_max_places": "最多 {decimal_places} 位小数",
     "decimal_max_digits": "数字太大",
+    "decimal_whole_digits": "整数部分太长",
     "date_parsing": "日期格式不对",
     "date_from_datetime_parsing": "日期格式不对",
     "literal_error": "不在可选范围内",
     "uuid_parsing": "格式不对",
     "extra_forbidden": "不认识的字段",
+    "json_invalid": "不是合法的 JSON",
 }
 
 
