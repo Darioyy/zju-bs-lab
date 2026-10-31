@@ -35,6 +35,18 @@ function collect() {
   return body;
 }
 
+// 起止日期跨几天，两头都算。日期字符串按 UTC 解析，不受夏令时影响
+function daySpan(start, end) {
+  return (Date.parse(end) - Date.parse(start)) / 86400000 + 1;
+}
+
+// 改了日期就把天数填成日期跨度，请半天的再自己改
+function fillDays() {
+  const start = field('leave.start_date').value;
+  const end = field('leave.end_date').value;
+  if (start && end && end >= start) field('leave.days').value = daySpan(start, end);
+}
+
 // 和后端的规则一致。前端先查一遍，用户马上能看到哪里填错；后端还会再查
 function validate(body) {
   const errors = {};
@@ -51,7 +63,7 @@ function validate(body) {
     } else if ((n * 2) % 1 !== 0) {
       errors['leave.days'] = '以 0.5 天为单位';
     } else if (start && end && end >= start) {
-      const span = (Date.parse(end) - Date.parse(start)) / 86400000 + 1;
+      const span = daySpan(start, end);
       if (n > span) errors['leave.days'] = `不能超过日期跨度 ${span} 天`;
     }
     if (!reason) errors['leave.reason'] = '不能为空';
@@ -85,8 +97,11 @@ async function save(andSubmit) {
     if (requestId === null) {
       const created = await api('POST', '/requests', { ...body, type: field('type').value, client_key: clientKey });
       requestId = created.id; // 记下来，提交失败后再点按钮就是修改，不会再新建
+      history.replaceState(null, '', '?id=' + requestId); // 地址栏也带上 id，刷新后还是修改这一张
       detail = await api('GET', '/requests/' + requestId);
     } else {
+      // 新建后紧接着的 GET 失败过，就还没有版本号，先读一次
+      if (version === null) version = (await api('GET', '/requests/' + requestId)).version;
       detail = await api('PUT', '/requests/' + requestId, { ...body, version });
     }
     version = detail.version;
@@ -142,10 +157,13 @@ async function init() {
     const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     field('leave.start_date').value = today;
     field('leave.end_date').value = today;
+    fillDays();
   }
 }
 
 field('type').addEventListener('change', switchType);
+field('leave.start_date').addEventListener('change', fillDays);
+field('leave.end_date').addEventListener('change', fillDays);
 document.getElementById('save-btn').addEventListener('click', () => save(false));
 document.getElementById('submit-btn').addEventListener('click', () => save(true));
 
