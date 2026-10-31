@@ -24,7 +24,7 @@ def login(conn: Connection, username: str, password: str) -> tuple[dict, str]:
 
     token = security.new_token()
     with conn.transaction():
-        sessions.delete_expired(conn, user["id"])
+        sessions.delete_expired(conn)
         sessions.create(conn, security.token_hash(token), user["id"], config.SESSION_HOURS)
     return public(user), token
 

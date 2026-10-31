@@ -28,10 +28,9 @@ def delete(conn: Connection, token_hash: str) -> None:
     conn.execute("DELETE FROM sessions WHERE token_hash = %s", (token_hash,))
 
 
-def delete_expired(conn: Connection, user_id: int) -> None:
-    conn.execute(
-        "DELETE FROM sessions WHERE user_id = %s AND expires_at <= now()", (user_id,)
-    )
+def delete_expired(conn: Connection) -> None:
+    """删掉所有人已经过期的会话。只删自己的话，不再登录的人留下的记录会一直留在表里。"""
+    conn.execute("DELETE FROM sessions WHERE expires_at <= now()")
 
 
 def delete_by_user(conn: Connection, user_id: int) -> None:
