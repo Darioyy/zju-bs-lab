@@ -185,6 +185,45 @@ def test_list_mine_filter(client):
     assert fields(chenjie.get("/api/requests?status=nothing")) == {"status"}
 
 
+# 待审数量和流程条 ------------------------------------------------------
+
+def test_todo_count(client):
+    # 张伟：1 号；王芳：2 号；管理员：1、2、5 号；陈杰不是审批人
+    for name, n in [("zhangwei", 1), ("wangfang", 1), ("admin", 3), ("chenjie", 0)]:
+        c = client(name)
+        r = c.get("/api/requests/todo/count")
+        assert r.status_code == 200
+        assert r.json() == {"count": n}, name
+        assert len(c.get("/api/requests/todo").json()) == n, name
+    zhangwei = client("zhangwei")
+    act(zhangwei, 1, "approve")
+    assert zhangwei.get("/api/requests/todo/count").json() == {"count": 0}
+    assert client().get("/api/requests/todo/count").status_code == 401
+
+
+def test_steps_in_detail(client):
+    chenjie = client("chenjie")
+    two_steps = [{"step": 1, "approver": "manager", "approver_name": "张伟"},
+                 {"step": 2, "approver": "finance", "approver_name": None}]
+    assert detail(chenjie, 2)["steps"] == two_steps  # 审批中
+    assert detail(chenjie, 6)["steps"] == two_steps  # 草稿，按提交后要走的级数
+    assert detail(client("liuyang"), 4)["steps"] == [
+        {"step": 1, "approver": "manager", "approver_name": "李娜"}]  # 已通过
+
+
+def test_steps_when_manager_applies(client):
+    # 5 号是经理张伟自己的请假，第 1 级是管理员
+    assert detail(client("zhangwei"), 5)["steps"] == [
+        {"step": 1, "approver": "admin", "approver_name": None}]
+
+
+def test_steps_follow_manager_change(client, db):
+    # 部门取消经理后，停在第 1 级的单子显示由管理员审，和待我审批列表一致
+    db.execute("UPDATE departments SET manager_id = NULL WHERE id = 1")
+    assert detail(client("chenjie"), 1)["steps"][0] == {"step": 1, "approver": "admin", "approver_name": None}
+    assert 1 in [x["id"] for x in client("admin").get("/api/requests/todo").json()]
+
+
 # 输入错误 422 ----------------------------------------------------------
 
 def test_leave_validation(client):

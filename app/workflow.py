@@ -80,17 +80,40 @@ def is_applicant(user: dict, req: dict) -> bool:
     return user["id"] == req["applicant_id"]
 
 
+def step_approver(req: dict, step: int) -> str:
+    """第 step 级由谁审："manager" 部门经理，"finance" 财务，"admin" 管理员。
+
+    部门没有经理，或者经理就是申请人时，第 1 级只能由管理员审。
+    管理员能代审任何一级，那是 can_approve 里的事，这里说的是这一级本来该谁审。
+    """
+    if step == 1:
+        if req["manager_id"] is None or req["manager_id"] == req["applicant_id"]:
+            return "admin"
+        return "manager"
+    if step == 2:
+        return "finance"
+    raise ValueError(f"没有第 {step} 级")
+
+
+def approvers(req: dict) -> list[str]:
+    """从第 1 级起每一级由谁审，详情页的流程条用。
+
+    提交过的单子按提交时定下的级数；草稿按类型算，也就是提交后要走的级数。
+    """
+    total = STEPS[req["type"]] if req["status"] == "draft" else req["total_steps"]
+    return [step_approver(req, step) for step in range(1, total + 1)]
+
+
 def can_approve(user: dict, req: dict) -> bool:
     """user 能不能审当前这一级。"""
     if req["status"] != "pending" or is_applicant(user, req):
         return False
     if user["role"] == "admin":
         return True
-    if req["current_step"] == 1:
+    approver = step_approver(req, req["current_step"])
+    if approver == "manager":
         return user["id"] == req["manager_id"]
-    if req["current_step"] == 2:
-        return user["role"] == "finance"
-    return False
+    return approver == "finance" and user["role"] == "finance"
 
 
 def can_view(user: dict, req: dict) -> bool:

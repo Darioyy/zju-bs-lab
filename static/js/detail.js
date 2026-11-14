@@ -27,6 +27,39 @@ function infoList(r) {
   return el('dl', { class: 'info' }, rows.map(([k, v]) => [el('dt', {}, k), el('dd', {}, v)]));
 }
 
+const APPROVER = { manager: '部门经理', finance: '财务', admin: '管理员' };
+
+function approverText(s) {
+  return s.approver_name ? `${APPROVER[s.approver]} ${s.approver_name}` : APPROVER[s.approver];
+}
+
+// 流程条：提交 → 第 1 级 → 第 2 级。每一级该谁审由后端按 workflow.py 算好放在 steps 里，
+// 这里只根据状态和这一轮的审批记录标出哪一级审完了、停在哪一级
+function flowBar(r) {
+  // 只看当前这一轮。之前被驳回的几轮在下面的审批记录里；草稿还没开始这一轮
+  const records = r.status === 'draft' ? [] : r.approvals.filter((a) => a.round === r.round);
+  const nodes = [el('span', { class: 'step ' + (r.status === 'draft' ? 'current' : 'done') },
+    '提交', r.status !== 'draft' && ' ✓')];
+  let waiting = null;
+  for (const s of r.steps) {
+    const record = records.find((a) => a.step === s.step);
+    let node;
+    if (record && record.decision === 'approve') {
+      // 审过的写实际审批的人，管理员代审时和原定的审批人不一样
+      node = el('span', { class: 'step done' }, record.approver_name, ' ✓');
+    } else if (record) {
+      node = el('span', { class: 'step rejected' }, record.approver_name, ' 驳回');
+    } else if (r.status === 'pending' && s.step === r.current_step) {
+      waiting = approverText(s);
+      node = el('span', { class: 'step current' }, waiting);
+    } else {
+      node = el('span', { class: 'step' }, approverText(s));
+    }
+    nodes.push(el('span', { class: 'arrow' }, '→'), node);
+  }
+  return el('div', { class: 'flow' }, nodes, waiting && el('span', { class: 'note' }, `等${waiting}审批`));
+}
+
 function historyTable(r) {
   if (r.approvals.length === 0) return el('div', { class: 'empty' }, '还没有审批记录');
   return el('table', {},
@@ -58,7 +91,7 @@ function actionArea(r) {
 
   if (has('approve')) {
     parts.push(
-      el('h2', {}, `审批（第 ${r.current_step}/${r.total_steps} 级）`),
+      el('h2', {}, '审批'),
       el('form', { id: 'decision-form', class: 'card', onsubmit: (e) => e.preventDefault() },
         el('div', { class: 'field' },
           el('textarea', { name: 'comment', maxlength: 500, placeholder: '审批意见，驳回时必填' }),
@@ -76,11 +109,11 @@ function render(r) {
   box.replaceChildren(
     el('div', { class: 'toolbar' },
       el('h1', {}, `#${r.id} ${r.title}`),
-      statusBadge(r.status),
-      progressText(r) && el('span', {}, '等待' + progressText(r) + '审批')),
+      statusBadge(r.status)),
+    flowBar(r),
     el('div', { class: 'card' }, infoList(r)),
     el('h2', {}, '审批记录'),
-    historyTable(r),
+    el('div', { class: 'table-wrap' }, historyTable(r)),
     ...actionArea(r), // 返回的是数组，要展开；直接传数组会被当成文字显示
   );
 }
@@ -127,7 +160,9 @@ function decide(decision) {
     showFieldErrors(form, { comment: '驳回必须填写理由' });
     return;
   }
-  act(decision, { comment }, decision === 'approve' ? '确定通过？' : '确定驳回？');
+  // 审完一张，导航栏的待审数量跟着变
+  act(decision, { comment }, decision === 'approve' ? '确定通过？' : '确定驳回？')
+    .then((ok) => ok && loadTodoCount());
 }
 
 async function reopen() {

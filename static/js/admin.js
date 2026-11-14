@@ -1,4 +1,4 @@
-// 管理部门和用户，只有管理员能进。点表格的一行编辑，「新建」按钮新建
+// 管理部门和用户，只有管理员能进。点表格的一行编辑（用户表还有「修改」按钮），「新建」按钮新建
 
 const deptForm = document.getElementById('dept-form');
 const userForm = document.getElementById('user-form');
@@ -109,10 +109,12 @@ function renderUsers() {
       el('td', {}, TEXT.role[u.role]),
       el('td', {}, departmentText(u)),
       el('td', {}, u.is_active ? '在职' : '已停用'),
-      el('td', {}, u.id !== me.id && el('button', {
-        class: u.is_active ? 'link danger' : 'link',
-        onclick: (e) => { e.stopPropagation(); toggleActive(u); },
-      }, u.is_active ? '停用' : '启用')),
+      el('td', { class: 'ops' },
+        el('button', { class: 'link', onclick: (e) => { e.stopPropagation(); editUser(u); } }, '修改'),
+        u.id !== me.id && el('button', {
+          class: u.is_active ? 'link danger' : 'link',
+          onclick: (e) => { e.stopPropagation(); toggleActive(u); },
+        }, u.is_active ? '停用' : '启用')),
     )));
 }
 
@@ -179,7 +181,10 @@ function resetPassword() {
     showFieldErrors(passwordForm, { password: '至少 6 个字符' });
     return;
   }
-  if (!confirm(`确定重置 ${editingUser.display_name} 的密码？`)) return;
+  const question = editingUser.id === me.id
+    ? '确定重置自己的密码？重置后要用新密码重新登录。'
+    : `确定重置 ${editingUser.display_name} 的密码？`;
+  if (!confirm(question)) return;
   send(passwordForm, 'POST', `/admin/users/${editingUser.id}/password`, { password }, '密码已重置');
 }
 

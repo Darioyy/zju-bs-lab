@@ -19,6 +19,12 @@ def list_todo(conn: Conn, user: CurrentUser):
     return service.list_todo(conn, user)
 
 
+@router.get("/todo/count")
+def count_todo(conn: Conn, user: CurrentUser):
+    """待我审批的数量，导航栏用。"""
+    return {"count": service.count_todo(conn, user)}
+
+
 @router.post("", status_code=201)
 def create(body: RequestCreate, conn: Conn, user: CurrentUser):
     """新建草稿。"""

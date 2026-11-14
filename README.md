@@ -103,8 +103,9 @@ python3 -m venv .venv                      # Ubuntu 报缺少 venv 模块时先 
 | GET | `/me` | 当前用户 |
 | GET | `/requests?status=` | 我的申请，按更新时间倒序 |
 | GET | `/requests/todo` | 待我审批 |
+| GET | `/requests/todo/count` | 待我审批的数量，导航栏用 |
 | POST | `/requests` | 新建草稿，带 `client_key` 防重复 |
-| GET | `/requests/{id}` | 详情，含审批记录和当前用户能做的操作 |
+| GET | `/requests/{id}` | 详情，含每一级由谁审、审批记录和当前用户能做的操作 |
 | PUT | `/requests/{id}` | 修改草稿 |
 | DELETE | `/requests/{id}?version=` | 删除草稿 |
 | POST | `/requests/{id}/submit` | 提交 |

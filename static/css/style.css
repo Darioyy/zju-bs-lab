@@ -20,21 +20,34 @@ body {
 a { color: var(--primary); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-/* 顶部导航 */
+/* 顶部导航。窄屏放不下时折成两行 */
 #nav {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 20px;
+  gap: 4px 20px;
   padding: 0 24px;
-  height: 52px;
+  min-height: 52px;
   background: #fff;
   border-bottom: 1px solid var(--line);
 }
 #nav .brand { font-weight: 600; }
 #nav a { color: var(--text); }
 #nav a.active { color: var(--primary); font-weight: 600; }
-#nav .spacer { flex: 1; }
+#nav .account { margin-left: auto; display: flex; gap: 12px; }
 #nav .who { color: var(--muted); }
+#nav .count {
+  margin-left: 4px;
+  padding: 0 6px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: normal;
+  background: var(--primary);
+  color: #fff;
+}
+@media (max-width: 600px) {
+  #nav { gap: 4px 14px; padding: 8px 16px; }
+}
 
 main { max-width: 960px; margin: 24px auto; padding: 0 16px; }
 
@@ -48,16 +61,18 @@ h2 { font-size: 16px; margin: 24px 0 8px; }
 #message.error { display: block; background: #ffebe9; color: var(--danger); }
 #message.ok { display: block; background: #dafbe1; color: var(--ok); }
 
-/* 表格 */
+/* 表格。外面套一层 .table-wrap，手机上表格放不下时在框里横向滚动，整页不跟着变宽 */
+.table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; background: #fff; }
 th, td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; }
-th { color: var(--muted); font-weight: 500; background: var(--bg); }
+th { color: var(--muted); font-weight: 500; background: var(--bg); white-space: nowrap; }
+@media (max-width: 600px) { th, td { padding: 8px 6px; } }
 tbody tr.link { cursor: pointer; }
 tbody tr.link:hover { background: #f0f6ff; }
 .empty { padding: 32px; text-align: center; color: var(--muted); }
 
 /* 状态标签 */
-.badge { display: inline-block; padding: 0 8px; border-radius: 10px; font-size: 12px; line-height: 20px; }
+.badge { display: inline-block; padding: 0 8px; border-radius: 10px; font-size: 12px; line-height: 20px; white-space: nowrap; }
 .badge.draft { background: #eaeef2; color: var(--muted); }
 .badge.pending { background: #ddf4ff; color: var(--primary); }
 .badge.approved { background: #dafbe1; color: var(--ok); }
@@ -104,15 +119,33 @@ button.link.danger { color: var(--danger); }
 dl.info { display: grid; grid-template-columns: 90px 1fr; gap: 8px 16px; margin: 0; }
 dl.info dt { color: var(--muted); }
 dl.info dd { margin: 0; white-space: pre-wrap; }
-.toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px; }
 .toolbar h1, .toolbar h2 { margin: 0; flex: 1; }
 .toolbar select { width: auto; }
+
+/* 详情页的审批流程条：审完的打勾，当前这一级高亮，驳回的标红 */
+.flow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-bottom: 16px; }
+.flow .step {
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  line-height: 24px;
+  background: #fff;
+  color: var(--muted);
+}
+.flow .step.done { color: var(--ok); }
+.flow .step.current { border-color: var(--primary); background: #ddf4ff; color: var(--primary); font-weight: 600; }
+.flow .step.rejected { border-color: var(--danger); background: #ffebe9; color: var(--danger); }
+.flow .arrow { color: var(--muted); }
+.flow .note { color: var(--muted); }
 
 /* 管理页 */
 section + section { margin-top: 32px; }
 section .card { margin-bottom: 16px; }
 .card h3 { font-size: 15px; margin: 0 0 12px; }
 tr.inactive td { color: var(--muted); }
+td.ops { white-space: nowrap; }
+td.ops button + button { margin-left: 12px; }
 
 /* 登录页 */
 .login { max-width: 360px; margin: 120px auto; }

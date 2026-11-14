@@ -11,7 +11,7 @@ from psycopg import Connection
 
 from .. import validation, workflow
 from ..errors import Conflict, Forbidden, Invalid, NotFound
-from ..repositories import approvals
+from ..repositories import approvals, users
 from ..repositories import requests as repo
 from ..schemas import RequestBody, RequestCreate, RequestEdit
 
@@ -30,6 +30,10 @@ def list_todo(conn: Connection, user: dict) -> list[dict]:
     return repo.list_todo(conn, user)
 
 
+def count_todo(conn: Connection, user: dict) -> int:
+    return repo.count_todo(conn, user)
+
+
 def get_detail(conn: Connection, user: dict, request_id: int) -> dict:
     req = _load(conn, user, request_id)
     if req["type"] == "leave":
@@ -37,6 +41,7 @@ def get_detail(conn: Connection, user: dict, request_id: int) -> dict:
     else:
         req["expense"] = repo.get_expense(conn, request_id)
     req["approvals"] = approvals.list_by_request(conn, request_id)
+    req["steps"] = _steps(conn, req)
     req["actions"] = workflow.allowed_actions(user, req)
     del req["client_key"]
     return req
@@ -122,13 +127,32 @@ def _load(conn: Connection, user: dict, request_id: int) -> dict:
     return req
 
 
+def _steps(conn: Connection, req: dict) -> list[dict]:
+    """每一级由谁审，详情页画流程条用。谁来审由 workflow.step_approver 定，
+    部门经理再带上姓名；财务和管理员可能不止一个人，不带姓名。"""
+    steps = []
+    for step, approver in enumerate(workflow.approvers(req), start=1):
+        name = None
+        if approver == "manager":
+            name = users.get(conn, req["manager_id"])["display_name"]
+        steps.append({"step": step, "approver": approver, "approver_name": name})
+    return steps
+
+
 def _require_applicant(user: dict, req: dict, action: str) -> None:
     if not workflow.is_applicant(user, req):
         raise Forbidden(f"只有申请人本人可以{workflow.ACTION_TEXT[action]}")
 
 
 def _save_fields(conn: Connection, req: dict, version: int, changes: dict) -> None:
-    if repo.update_fields(conn, req["id"], version, changes) is None:
+    """version 是页面上看到的版本号。
+
+    前面的检查都是对着读出来的 req 做的，所以写库用 req 的版本号：
+    读出来以后有人改过就更新不到。页面上的版本号只用来判断用户看到的是不是最新的。
+    """
+    if version != req["version"]:
+        raise Conflict("单据已被修改，请刷新后再操作")
+    if repo.update_fields(conn, req["id"], req["version"], changes) is None:
         raise Conflict("单据已被修改，请刷新后再操作")
 
 

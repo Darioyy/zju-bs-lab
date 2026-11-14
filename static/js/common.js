@@ -120,6 +120,19 @@ function uuid4() {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
+// 导航栏「待我审批」后面的数字，为 0 时不显示
+function setTodoCount(n) {
+  const badge = document.getElementById('todo-count');
+  if (!badge) return;
+  badge.textContent = n;
+  badge.hidden = n === 0;
+}
+
+// 只取一个数字。不等它返回，页面照常显示，取不到就不显示数字
+function loadTodoCount() {
+  api('GET', '/requests/todo/count').then((d) => setTodoCount(d.count)).catch(() => {});
+}
+
 async function logout() {
   await api('POST', '/logout').catch(() => {});
   location.href = 'login.html';
@@ -129,17 +142,20 @@ async function logout() {
 async function initPage() {
   const user = await api('GET', '/me');
   const here = location.pathname.split('/').pop() || 'index.html';
-  const link = (href, text) => el('a', { href, class: href === here ? 'active' : null }, text);
+  const link = (href, ...text) => el('a', { href, class: href === here ? 'active' : null }, text);
   // append(null) 会插入文字“null”，所以先去掉不显示的项
   document.getElementById('nav').append(...[
     el('span', { class: 'brand' }, '审批系统'),
     link('index.html', '我的申请'),
-    link('todo.html', '待我审批'),
+    link('todo.html', '待我审批', el('span', { id: 'todo-count', class: 'count', hidden: true })),
     user.department_id !== null && link('form.html', '新建申请'),
     user.role === 'admin' && link('admin.html', '管理'),
-    el('span', { class: 'spacer' }),
-    el('span', { class: 'who' }, user.display_name),
-    el('button', { class: 'link', onclick: logout }, '退出'),
+    // 姓名和退出放在一起，窄屏折行时一起换到第二行
+    el('span', { class: 'account' },
+      el('span', { class: 'who' }, user.display_name),
+      el('button', { class: 'link', onclick: logout }, '退出')),
   ].filter(Boolean));
+  // 待我审批页自己会取列表，用列表的长度就行，不用再请求一次
+  if (here !== 'todo.html') loadTodoCount();
   return user;
 }

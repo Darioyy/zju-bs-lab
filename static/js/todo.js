@@ -10,6 +10,7 @@ async function load() {
       el('td', {}, formatTime(r.submitted_at)),
     )));
   document.getElementById('empty').hidden = rows.length > 0;
+  setTodoCount(rows.length);
 }
 
 initPage().then(load).catch(showError);

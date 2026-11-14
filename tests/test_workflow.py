@@ -5,8 +5,8 @@ from datetime import datetime, timezone
 import pytest
 
 from app.errors import Conflict
-from app.workflow import (allowed_actions, can_approve, can_view, check_status,
-                          transition)
+from app.workflow import (allowed_actions, approvers, can_approve, can_view,
+                          check_status, step_approver, transition)
 
 NOW = datetime(2026, 10, 9, 12, 0, tzinfo=timezone.utc)
 
@@ -105,6 +105,56 @@ def test_nobody_approves_finished_request():
     req = make_request(status="approved", current_step=None)
     assert not can_approve(ADMIN, req)
     assert not can_approve(MANAGER, req)
+
+
+def test_department_without_manager():
+    # 部门没设经理，第 1 级只有管理员能审
+    req = make_request(manager_id=None)
+    assert not can_approve(MANAGER, req)
+    assert not can_approve(STAFF, req)
+    assert can_approve(ADMIN, req)
+
+
+# 每一级由谁审（详情页的流程条） ------------------------------------------
+
+def test_approvers_by_type():
+    assert approvers(make_request()) == ["manager", "finance"]
+    assert approvers(make_request(type="leave", total_steps=1)) == ["manager"]
+
+
+def test_manager_own_request_goes_to_admin():
+    req = make_request(type="leave", applicant_id=2, total_steps=1)
+    assert approvers(req) == ["admin"]
+
+
+def test_no_manager_goes_to_admin():
+    assert approvers(make_request(manager_id=None)) == ["admin", "finance"]
+
+
+def test_draft_shows_steps_after_submit():
+    # 没提交过的草稿还没有 total_steps，按类型算
+    req = make_request(status="draft", round=0, total_steps=None, current_step=None)
+    assert approvers(req) == ["manager", "finance"]
+
+
+def test_finished_request_keeps_its_steps():
+    for status in ["approved", "rejected", "withdrawn"]:
+        assert approvers(make_request(status=status, current_step=None)) == ["manager", "finance"]
+
+
+def test_step_approver_matches_can_approve():
+    # 流程条显示的审批人，就是 can_approve 放行的人
+    for manager_id in [2, None]:
+        for step in [1, 2]:
+            req = make_request(manager_id=manager_id, current_step=step)
+            approver = step_approver(req, step)
+            assert can_approve(MANAGER, req) == (approver == "manager")
+            assert can_approve(FINANCE, req) == (approver == "finance")
+
+
+def test_no_third_step():
+    with pytest.raises(ValueError):
+        step_approver(make_request(), 3)
 
 
 # 谁能看 ----------------------------------------------------------------

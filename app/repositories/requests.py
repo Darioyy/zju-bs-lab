@@ -30,21 +30,41 @@ def list_by_applicant(conn: Connection, applicant_id: int, status: str | None) -
     return conn.execute(query, params).fetchall()
 
 
+# 待 user 审批的条件，和 workflow.can_approve 一致，改一处要同时改另一处。
+# 列表和数量共用这一段，免得两边的条件对不上
+TODO_WHERE = """
+    WHERE r.status = 'pending'
+      AND r.applicant_id <> %(uid)s
+      AND (%(is_admin)s
+           OR (r.current_step = 1 AND d.manager_id = %(uid)s)
+           OR (r.current_step = 2 AND %(is_finance)s))
+"""
+
+
+def _todo_params(user: dict) -> dict:
+    return {"uid": user["id"],
+            "is_admin": user["role"] == "admin",
+            "is_finance": user["role"] == "finance"}
+
+
 def list_todo(conn: Connection, user: dict) -> list[dict]:
-    """待 user 审批的单子。条件和 workflow.can_approve 一致，改一处要同时改另一处。"""
+    """待 user 审批的单子。"""
     return conn.execute(
-        SELECT_REQUEST + """
-        WHERE r.status = 'pending'
-          AND r.applicant_id <> %(uid)s
-          AND (%(is_admin)s
-               OR (r.current_step = 1 AND d.manager_id = %(uid)s)
-               OR (r.current_step = 2 AND %(is_finance)s))
-        ORDER BY r.submitted_at
-        """,
-        {"uid": user["id"],
-         "is_admin": user["role"] == "admin",
-         "is_finance": user["role"] == "finance"},
+        SELECT_REQUEST + TODO_WHERE + "ORDER BY r.submitted_at", _todo_params(user)
     ).fetchall()
+
+
+def count_todo(conn: Connection, user: dict) -> int:
+    """待 user 审批的单子有几张，导航栏用。只数数，不取单据内容。"""
+    row = conn.execute(
+        """
+        SELECT count(*) AS n
+        FROM requests r
+        JOIN departments d ON d.id = r.department_id
+        """ + TODO_WHERE,
+        _todo_params(user),
+    ).fetchone()
+    return row["n"]
 
 
 def insert(conn: Connection, applicant_id: int, department_id: int,
