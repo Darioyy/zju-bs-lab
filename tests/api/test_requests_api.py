@@ -74,6 +74,18 @@ def test_logout(client):
     assert c.get("/api/me").status_code == 401
 
 
+def test_login_deletes_everyones_expired_sessions(client, db):
+    # 李娜有一个过期的和一个没过期的会话，陈杰登录时过期的那个也要删掉
+    db.execute("""
+        INSERT INTO sessions (token_hash, user_id, expires_at) VALUES
+            (repeat('a', 64), 3, now() - interval '1 hour'),
+            (repeat('b', 64), 3, now() + interval '1 hour')
+    """)
+    client("chenjie")
+    rows = db.execute("SELECT token_hash FROM sessions WHERE user_id = 3").fetchall()
+    assert [r["token_hash"] for r in rows] == ["b" * 64]
+
+
 # 完整流程 --------------------------------------------------------------
 
 def test_leave_flow(client):
