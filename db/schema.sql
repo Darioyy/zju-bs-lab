@@ -86,7 +86,7 @@ CREATE TABLE requests (
     CHECK (status = 'draft' OR round >= 1)
 );
 
-CREATE INDEX ON requests (applicant_id, created_at DESC);
+CREATE INDEX ON requests (applicant_id, updated_at DESC);  -- 我的申请按更新时间倒序
 -- 待审批列表只查 pending 的单子，用部分索引
 CREATE INDEX ON requests (current_step, department_id) WHERE status = 'pending';
 

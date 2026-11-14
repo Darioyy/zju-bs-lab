@@ -101,7 +101,7 @@ python3 -m venv .venv                      # Ubuntu 报缺少 venv 模块时先 
 | POST | `/login` | 登录 |
 | POST | `/logout` | 退出 |
 | GET | `/me` | 当前用户 |
-| GET | `/requests?status=` | 我的申请 |
+| GET | `/requests?status=` | 我的申请，按更新时间倒序 |
 | GET | `/requests/todo` | 待我审批 |
 | POST | `/requests` | 新建草稿，带 `client_key` 防重复 |
 | GET | `/requests/{id}` | 详情，含审批记录和当前用户能做的操作 |

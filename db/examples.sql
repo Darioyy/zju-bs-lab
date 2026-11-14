@@ -8,7 +8,7 @@
 SELECT r.id, r.type, r.title, r.status, r.current_step, r.total_steps, r.updated_at
 FROM requests r
 WHERE r.applicant_id = :uid
-ORDER BY r.created_at DESC;
+ORDER BY r.updated_at DESC;
 
 
 -- 待我审批

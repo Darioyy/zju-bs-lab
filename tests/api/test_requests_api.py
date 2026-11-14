@@ -170,6 +170,14 @@ def test_edit_and_delete_draft(client):
     assert chenjie.get("/api/requests/6").status_code == 404
 
 
+def test_list_mine_sorted_by_updated_at(client):
+    # 演示数据里陈杰的单子按创建和按更新排都是 6、1、2；财务批完 2 号，2 号的更新时间最新，排到第一
+    chenjie = client("chenjie")
+    assert [x["id"] for x in chenjie.get("/api/requests").json()] == [6, 1, 2]
+    assert act(client("wangfang"), 2, "approve").status_code == 200
+    assert [x["id"] for x in chenjie.get("/api/requests").json()] == [2, 6, 1]
+
+
 def test_list_mine_filter(client):
     chenjie = client("chenjie")
     assert {x["id"] for x in chenjie.get("/api/requests").json()} == {1, 2, 6}

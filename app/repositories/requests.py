@@ -26,7 +26,7 @@ def list_by_applicant(conn: Connection, applicant_id: int, status: str | None) -
     if status:
         query += " AND r.status = %s"
         params.append(status)
-    query += " ORDER BY r.created_at DESC"
+    query += " ORDER BY r.updated_at DESC"
     return conn.execute(query, params).fetchall()
 
 
